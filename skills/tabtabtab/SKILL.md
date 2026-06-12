@@ -134,8 +134,71 @@ tabtabtab webhook list --json                        # URLs masked; add --reveal
 tabtabtab webhook revoke <name-or-id> --yes
 ```
 
-POSTing JSON to a webhook URL starts an agent run (project webhooks get a
-fresh git worktree per call):
+The URL **is** the credential — treat it like a secret, hand it to CI/GitHub
+Actions/Zapier/alerting, and revoke it when no longer needed.
+
+### How a created webhook's URL actually works
+
+There is exactly **one endpoint** behind the secret URL, and it does both the
+prompting and the file upload in a single call — there is no separate upload
+API:
+
+```
+POST https://<env>.tabtabtab.app/webhooks/<token>
+Content-Type: application/json
+(no auth header — the <token> in the path is the credential)
+
+{
+  "message": "<the prompt for the agent>",          // optional
+  "attachments": [ ...up to 5 files... ]             // optional
+}
+```
+
+Every POST **starts a new agent run** and returns immediately (fire-and-forget):
+- `--project` webhook → a fresh git worktree + new session in that project.
+- meta webhook → a turn on the persistent meta agent.
+
+**Prompting API** = the `message` field. It becomes the agent's prompt verbatim.
+If you omit it but send attachments, the agent gets a default "files received"
+prompt; omit everything and the raw JSON is handed to the agent. So for useful
+work, always send `message`.
+
+**File-upload API** = the `attachments` array, inline in the same POST. Each
+entry:
+
+```json
+{
+  "type": "file",                       // "file" or "image"
+  "name": "report.md",                  // filename (1–255 chars)
+  "contentType": "text/markdown",       // must be one of the allowed types below
+  "data": "data:text/markdown;base64,<BASE64>"   // a base64 data URL; its media type MUST equal contentType
+}
+```
+
+- Limits: **≤5 attachments, ≤50MB total.**
+- Allowed `contentType`s only: `image/png`, `image/jpeg`, `image/webp`,
+  `image/gif`, `text/plain`, `text/markdown`, `application/json`,
+  `application/zip`, `text/csv`. Anything else is rejected — zip it, or use
+  `tabtabtab upload` (scp, no type/size limit) for the file and just reference
+  its path in `message`.
+- Uploaded files land in the session workspace at
+  `.attachments/incoming-webhook/<webhook-name>/att-<n>-<filename>`, and the
+  agent's prompt automatically gets an "Attached files:" list of those paths,
+  so it knows where to find them.
+
+**Response** (JSON) — keep `sessionUrl` to watch or reference the run:
+
+```json
+{
+  "ok": true, "authenticated": true,
+  "webhookId": "...", "sessionID": "ses_...", "messageID": "msg_...",
+  "sessionUrl": "https://<env>.tabtabtab.app/<...>/session/ses_...",
+  "target": { "type": "project", "value": "<projectId>" },   // or {"type":"meta","value":"meta"}
+  "echo": { "message": "...", "attachments": [ {name, path, contentType, size}, ... ] }
+}
+```
+
+Prompt only:
 
 ```bash
 curl -X POST -H 'Content-Type: application/json' \
@@ -143,10 +206,18 @@ curl -X POST -H 'Content-Type: application/json' \
   https://<env>.tabtabtab.app/webhooks/<token>
 ```
 
-The URL **is** the credential — treat it like a secret, hand it to CI/GitHub
-Actions/Zapier/alerting, and revoke it when no longer needed. The POST body
-also accepts `attachments` (≤5 base64 data-URL files, ≤50MB total — png,
-jpeg, webp, gif, txt, md, json, zip, csv).
+Prompt + a file (build the base64 data URL inline):
+
+```bash
+B64=$(base64 < notes.md | tr -d '\n')
+curl -X POST -H 'Content-Type: application/json' \
+  -d "$(printf '{"message":"Act on the attached notes.","attachments":[{"type":"file","name":"notes.md","contentType":"text/markdown","data":"data:text/markdown;base64,%s"}]}' "$B64")" \
+  https://<env>.tabtabtab.app/webhooks/<token>
+```
+
+To send a follow-up to the *same* session a webhook started (instead of a new
+run each time), grab the `sessionID` from the response and use
+`tabtabtab agent send <sessionID> "<message>"`.
 
 ## Recipes
 

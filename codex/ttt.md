@@ -29,9 +29,14 @@ Commands:
   `agent send <id> "<msg>" [--queue]`, `agent abort <id>`, `agent status`.
   Session IDs accept unique prefixes. Always show the user the session URL.
 - Webhooks: `tabtabtab webhook create <name> [--project p] --json` returns a
-  secret URL (shown once); POSTing `{"message": "..."}` to it starts an agent
-  run. `webhook list` masks URLs (`--reveal` for full secrets), `webhook
-  revoke <name> --yes`. Treat URLs as credentials.
+  secret URL (shown once). One no-auth endpoint behind it does both prompting
+  and upload in a single POST: `POST <url>` `{"message":"<prompt>",
+  "attachments":[{"type":"file","name":"x.md","contentType":"text/markdown",
+  "data":"data:text/markdown;base64,<b64>"}]}` — each POST starts a new agent
+  run (fresh worktree for project targets) and returns `{sessionID,
+  sessionUrl, ...}`. Attachments: ≤5 files, ≤50MB, types png/jpeg/webp/gif/
+  txt/md/json/zip/csv only. `webhook list` masks URLs (`--reveal` for full
+  secrets), `webhook revoke <name> --yes`. Treat URLs as credentials.
 
 The meta agent (kick without `--project`) orchestrates the whole machine: ask
 it in plain English to create scheduled automations/crons (daily, weekdays,
