@@ -1,0 +1,13 @@
+{
+  "name": "tabtabtab",
+  "version": "0.1.0",
+  "description": "Create and drive tabtabtab (gv-code) cloud dev environments from Claude Code: create VMs, add repositories, create webhooks, upload files, and kick off agents.",
+  "author": {
+    "name": "tabtabtab",
+    "email": "support@tabtabtab.ai"
+  },
+  "homepage": "https://tabtabtab.ai",
+  "repository": "https://github.com/tabtabtabai/ttt-skill",
+  "license": "MIT",
+  "keywords": ["tabtabtab", "gv-code", "cloud", "vm", "agents", "webhooks"]
+}

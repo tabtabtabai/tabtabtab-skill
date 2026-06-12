@@ -1,0 +1,14 @@
+{
+  "name": "tabtabtab",
+  "owner": {
+    "name": "tabtabtab",
+    "email": "support@tabtabtab.ai"
+  },
+  "plugins": [
+    {
+      "name": "tabtabtab",
+      "source": "./",
+      "description": "Create and drive tabtabtab (gv-code) cloud dev environments: VMs, repositories, webhooks, file uploads, and agent kickoff."
+    }
+  ]
+}
