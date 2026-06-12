@@ -8,7 +8,7 @@
     {
       "name": "tabtabtab",
       "source": "./",
-      "description": "Create and drive tabtabtab (gv-code) cloud dev environments: VMs, repositories, webhooks, file uploads, and agent kickoff."
+      "description": "Remote-control tabtabtab cloud dev environments: envs, repositories, webhooks, file uploads, remote agents, and meta-agent automations."
     }
   ]
 }

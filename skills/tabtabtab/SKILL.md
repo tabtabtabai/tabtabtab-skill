@@ -1,12 +1,12 @@
 ---
 name: tabtabtab
-description: Control tabtabtab (gv-code / ttt) cloud dev environments with the official `tabtabtab` CLI. Use when the user wants to create or manage a tabtabtab VM/environment, add a repository to one, upload files, SSH in, create webhooks, kick off or talk to remote agents (including the meta agent), set up automations/scheduled jobs on tabtabtab, or check what their remote agents are doing.
+description: Control tabtabtab (ttt) cloud dev environments with the official `tabtabtab` CLI. Use when the user wants to create or manage a tabtabtab VM/environment, add a repository to one, upload files, SSH in, create webhooks, kick off or talk to remote agents (including the meta agent), set up automations/scheduled jobs on tabtabtab, or check what their remote agents are doing.
 ---
 
 # tabtabtab
 
 The `tabtabtab` CLI controls the tabtabtab platform: cloud dev environments
-("envs") that each run the gv-code agent IDE at `https://<env>.tabtabtab.app`.
+("envs") that each run the tabtabtab agent IDE at `https://<env>.tabtabtab.app`.
 Through it you can drive the remote machine end to end — create envs, put
 repos on them, start and steer agent runs, watch their output live, manage
 webhooks, and ask the meta agent to build automations.

@@ -1,6 +1,6 @@
 # tabtabtab (ttt) — remote-control cloud dev environments
 
-Use the official `tabtabtab` CLI to manage tabtabtab (gv-code) cloud
+Use the official `tabtabtab` CLI to manage tabtabtab cloud
 environments and to run and steer remote agents on them.
 
 Rules:

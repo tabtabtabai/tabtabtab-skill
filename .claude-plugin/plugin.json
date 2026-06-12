@@ -1,20 +1,20 @@
 {
   "name": "tabtabtab",
   "version": "0.2.0",
-  "description": "Remote-control tabtabtab (gv-code) from Claude Code: create envs, add repositories, run and steer remote agents (kick/tail/send/status), manage webhooks, and build automations via the meta agent \u2014 through the official tabtabtab CLI.",
+  "description": "Remote-control tabtabtab from Claude Code: create envs, add repositories, run and steer remote agents (kick/tail/send/status), manage webhooks, and build automations via the meta agent \u2014 through the official tabtabtab CLI.",
   "author": {
     "name": "tabtabtab",
     "email": "support@tabtabtab.ai"
   },
   "homepage": "https://tabtabtab.ai",
-  "repository": "https://github.com/tabtabtabai/ttt-skill",
+  "repository": "https://github.com/tabtabtabai/tabtabtab-skill",
   "license": "MIT",
   "keywords": [
     "tabtabtab",
-    "gv-code",
+    "ttt",
     "cloud",
-    "vm",
     "agents",
-    "webhooks"
+    "webhooks",
+    "automations"
   ]
 }

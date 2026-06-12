@@ -27,7 +27,7 @@ mkdir -p "$CLAUDE_SKILLS_DIR"
 rm -rf "$CLAUDE_SKILLS_DIR/tabtabtab"
 cp -R "$REPO_DIR/skills/tabtabtab" "$CLAUDE_SKILLS_DIR/tabtabtab"
 echo "Installed Claude Code skill: $CLAUDE_SKILLS_DIR/tabtabtab"
-echo "  (or install as a plugin: /plugin marketplace add tabtabtabai/ttt-skill)"
+echo "  (or install as a plugin: /plugin marketplace add tabtabtabai/tabtabtab-skill)"
 
 # 3. Codex prompt
 CODEX_PROMPTS_DIR="$HOME/.codex/prompts"

@@ -1,4 +1,4 @@
-# ttt-skill — drive tabtabtab from Claude Code & Codex
+# tabtabtab-skill — drive tabtabtab from Claude Code & Codex
 
 A skill/plugin that teaches Claude Code and Codex to remote-control the
 [tabtabtab](https://tabtabtab.ai) platform through the official
@@ -35,14 +35,14 @@ this repo adds no second CLI, just the agent-facing skill around it.
 **Everything at once:**
 
 ```bash
-git clone https://github.com/tabtabtabai/ttt-skill.git
-cd ttt-skill && ./install.sh
+git clone https://github.com/tabtabtabai/tabtabtab-skill.git
+cd tabtabtab-skill && ./install.sh
 ```
 
 **Claude Code, as a plugin:**
 
 ```
-/plugin marketplace add tabtabtabai/ttt-skill
+/plugin marketplace add tabtabtabai/tabtabtab-skill
 /plugin install tabtabtab@tabtabtab
 ```
 
