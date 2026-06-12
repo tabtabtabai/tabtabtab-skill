@@ -1,130 +1,160 @@
 ---
 name: tabtabtab
-description: Manage tabtabtab (gv-code / ttt) cloud dev environments with the `ttt` CLI. Use when the user wants to create/list/delete a tabtabtab VM, add a repository to one, create a webhook, upload files to a VM, SSH into a VM, or kick off a remote agent on tabtabtab/gv-code with a prompt.
+description: Control tabtabtab (gv-code / ttt) cloud dev environments with the official `tabtabtab` CLI. Use when the user wants to create or manage a tabtabtab VM/environment, add a repository to one, upload files, SSH in, create webhooks, kick off or talk to remote agents (including the meta agent), set up automations/scheduled jobs on tabtabtab, or check what their remote agents are doing.
 ---
 
 # tabtabtab
 
-`ttt` is a CLI for the tabtabtab platform (also called gv-code). Every user
-"VM" (environment) is a cloud machine running the gv-code agent IDE at
-`https://<vm-name>.tabtabtab.ai`. The CLI handles auth, VM lifecycle,
-repository setup, webhooks, file uploads, and starting agent sessions.
+The `tabtabtab` CLI controls the tabtabtab platform: cloud dev environments
+("envs") that each run the gv-code agent IDE at `https://<env>.tabtabtab.app`.
+Through it you can drive the remote machine end to end — create envs, put
+repos on them, start and steer agent runs, watch their output live, manage
+webhooks, and ask the meta agent to build automations.
 
-If `ttt` is not on PATH, it lives at `bin/ttt` in this plugin's repo
-(https://github.com/tabtabtabai/ttt-skill); it is a single Python 3.9+ file
-with no dependencies.
+## Setup and auth
 
-## Ground rules
-
-- Always pass `--json` when you need to parse output.
-- Auth: run `ttt whoami --json` first. If it fails with "Not logged in",
-  ask the user to run `ttt login` themselves (it opens a browser); do not run
-  interactive login on their behalf. A token in `TTT_API_TOKEN`/`GV_API_TOKEN`
-  also works.
-- VM names: 3-30 chars, lowercase letters/numbers/hyphens. Users can have at
-  most 5 VMs.
-- Destructive commands (`vm delete`, `repo delete`) prompt for confirmation;
-  pass `--yes` only when the user explicitly asked for the deletion.
-- VM provisioning takes a few minutes. After `vm create`, poll
-  `ttt vm get <name> --json` until `.status == "ready"` (every ~30s).
-
-## Commands
-
-### Account
 ```bash
-ttt login                 # interactive browser OAuth — have the USER run this
-ttt whoami --json         # check auth / current user
+tabtabtab auth login        # browser OAuth — have the USER run this, not you
+tabtabtab env list --json   # check auth + see envs
+tabtabtab env use <name>    # set the current env (avoids --env on every call)
 ```
 
-### VMs
+- If `env list` fails with "Unauthorized", ask the user to run
+  `tabtabtab auth login` themselves. Never run interactive login for them.
+- If the CLI exits with "New tabtabtab version detected", run the upgrade
+  command it prints, then retry.
+- Every env-scoped command accepts `--env <name>` to override the current env.
+- Agent/webhook commands (`tabtabtab agent --help`) need a recent CLI. If the
+  group is missing, upgrade: `pip install --upgrade tabtabtab` (or the
+  equivalent for how it was installed).
+
+## Ground rules for agents
+
+- Pass `--json` whenever you parse output (supported on: `env list`,
+  `repo list`, `repo env list`, `agent list/kick/send/tail/last/status`,
+  `webhook list/create`, `runtime previews`, `profile *`).
+- You are in a non-TTY shell: commands that confirm will refuse without
+  `--yes`; pass it only when the user explicitly asked for the destructive
+  action (`env destroy`, `webhook revoke`, `repo env rm`).
+- After `env create`, the command itself polls until ready (a few minutes).
+- Always show the user the session URL printed by `agent kick`/`agent send`
+  so they can open the run in the browser.
+
+## Environments (cloud VMs)
+
 ```bash
-ttt vm list --json
-ttt vm create <name> [--git-name "Ada" --git-email ada@example.com] [--size regular|large]
-ttt vm get <name> --json              # full record incl. status/step
-ttt vm delete <name> [--yes]
-ttt vm restart <name> --mode ide|instance|hard
-ttt vm password <name> --json         # web login creds for https://<name>.tabtabtab.ai
-ttt vm ssh <name> [command...]        # interactive or one-shot remote command
-ttt vm cp <name> <files...> [--remote-path ~/uploads/]   # scp, any file type/size
+tabtabtab env create                      # interactive; or pass --name, --git-user-name, --git-user-email
+tabtabtab env list --json
+tabtabtab env info [--reveal]             # URL, status; --reveal prints the web password
+tabtabtab env use <name>                  # set current env
+tabtabtab env destroy <name> --yes
+tabtabtab ssh [-- <remote command>]       # SSH in (keys handled automatically)
+tabtabtab upload <local paths...> --to <remote path>   # rsync any files to the env
+tabtabtab open [opencode|claude|codex|vscode|cursor]   # attach a local editor (interactive)
 ```
 
-### Repositories (clone a git repo onto a VM)
-```bash
-ttt repo list --json
-ttt repo add <git-url> --vm <name> [--name app] [--branch main] [--path /home/user/app]
-ttt repo sync <name>                  # re-run the clone/sync job
-ttt repo github --vm <name> --json    # repos visible to the VM's GitHub connection
-```
-`repo add` requires a git remote URL. Private GitHub repos need the VM's
-GitHub connection set up first (the user does this in the gv-code web UI).
-After adding, sync status appears in `ttt repo list --json` (`syncStatus`).
+## Repositories
 
-### Webhooks (HTTP endpoints that start an agent session when POSTed to)
 ```bash
-ttt webhook list --vm <name> --json     # includes full secret URLs + valid project targets
-ttt webhook create <hook-name> --vm <name> [--project <project>]
-ttt webhook revoke <hook-name-or-id> --vm <name>
+tabtabtab repo add <git-url-or-local-dir> [--yes]   # register + clone onto the env
+tabtabtab repo list --json                          # includes sync status
+tabtabtab repo sync [--repo <name>]
+tabtabtab repo env list --repo <name> [--reveal]    # repo secrets / env vars
+tabtabtab repo env add KEY=VALUE --repo <name> [--secret]
 ```
-- Default target is the VM's **meta agent** (can work across all projects).
-- `--project` targets a specific project; valid values come from the
-  `targets` array in `webhook list --json` (only GitHub-cloned projects qualify).
-- The webhook URL is a secret (`https://<vm>.tabtabtab.ai/webhooks/<token>`).
-  Anyone with it can start agent sessions — treat it like a credential. This
-  is what you give to CI, GitHub Actions, Zapier, etc.
-- Calling a webhook: `POST` JSON `{"message": "...", "attachments": [...]}`
-  with no extra auth. Response includes `sessionUrl`.
 
-### Kick off an agent / upload files
+## Remote agent control
+
+This is the core power: run and steer agents on the env from here.
+
 ```bash
-ttt kick <vm> "Fix the failing tests in my-app" [--project my-app] [--file report.md]
-ttt upload <vm> notes.md data.csv [--project my-app] [--message "context docs"]
+tabtabtab agent kick "<prompt>"                     # prompt the META AGENT (see below)
+tabtabtab agent kick "<prompt>" --project <name>    # fresh session in one project
+tabtabtab agent kick "<prompt>" --watch             # ...and stream output here until idle
+tabtabtab agent list --json                         # recent sessions: id, project, busy/idle
+tabtabtab agent tail <session-id> [--follow]        # read a session; --follow streams until idle
+tabtabtab agent last <session-id>                   # just the last assistant reply (script-friendly)
+tabtabtab agent send <session-id> "<message>" [--queue] [--watch]   # follow-up on an existing session
+tabtabtab agent abort <session-id>                  # cancel a running session
+tabtabtab agent status                              # all projects: what's running, attention items, PRs, automations
 ```
-- `kick` starts a remote agent session with the prompt and prints the
-  `sessionUrl` — always show that URL to the user so they can watch the run.
-- Both reuse (or create) a webhook named `ttt-cli` on the VM.
-- Webhook attachments: max 5 files / 50MB total, types limited to
-  png, jpeg, webp, gif, txt, md, json, zip, csv. For anything else use
-  `ttt vm cp` (scp over SSH, no limits).
+
+- Session IDs accept unique prefixes (`ses_195d9f` works).
+- `agent send` on a busy session fails unless you pass `--queue`, which
+  delivers the message when the current run finishes.
+- Typical loop for delegated work: `kick --json` → note `sessionID` → do other
+  things → `agent tail <id>` / `agent last <id>` to collect the result.
+- Use `--watch` when the user wants to see the run as it happens; use the
+  async loop when the task is long.
 
 ## The meta agent
 
-When `kick` runs without `--project`, the prompt goes to the VM's **meta
-agent** — the orchestrator that manages the whole VM, not just one repo. It is
-much more capable than a single project agent, so route requests like these to
-it (plain English prompts; it has its own tools for all of this):
+`agent kick` without `--project` talks to the env's **meta agent** — the
+persistent orchestrator for the whole machine (one durable session; your
+prompts join its ongoing conversation). It is the right target for anything
+beyond a single repo. Ask it in plain English to:
 
-- **Automations (crons):** create/pause/inspect scheduled recurring prompts —
-  once, daily, weekdays, weekly, or raw RRULE, with timezone — targeting the
-  meta agent itself or any project on the VM.
-  `ttt kick demo-box "Every weekday at 9am, check open PRs across my projects and Slack me a digest"`
-- **Durable jobs:** long-lived tracked work with an end state and periodic
-  background checks (e.g. babysit CI, watch a deploy until healthy).
-  `ttt kick demo-box "Create a durable job: land PR #42 in my-app — keep rebasing and re-running CI until it's merged"`
-- **Worker orchestration:** plan multi-repo work, spawn agent sessions in
-  project worktrees, answer their permission requests, report progress.
-  `ttt kick demo-box "Start workers to bump lodash in all three repos and open PRs"`
-- **Projects & worktrees:** create new projects, manage worktrees.
-- **Status:** `ttt kick demo-box "Status: what's running, what needs my attention?"`
+- **Create automations (crons):** scheduled recurring prompts — once, daily,
+  weekdays, weekly, or raw RRULE, any timezone, targeting itself or any
+  project. `tabtabtab agent kick "Every weekday at 9am Europe/London, review open PRs across my projects and post a digest"`
+- **Run durable jobs:** long-lived tracked work with an end state and periodic
+  background checks. `tabtabtab agent kick "Create a durable job: land PR #42 in my-app — keep rebasing and re-running CI until it merges"`
+- **Orchestrate workers:** plan multi-repo changes, spawn agent sessions in
+  project worktrees, answer their permission requests, report back.
+- **Manage the machine:** create projects and worktrees, summarize what needs
+  attention (`tabtabtab agent status` is the read-only view of this).
 
-Rule of thumb: a task *inside one repo* → `--project <name>`; anything about
-scheduling, automations, multiple projects, monitoring, or the VM itself →
-meta agent (no `--project`). Webhooks created with no `--project` likewise
-target the meta agent, so external systems (CI, alerts) can feed it events
-that it handles or fans out to projects.
+Routing rule: task inside one repo → `--project <name>`; scheduling,
+automations, multi-repo work, monitoring, or questions about the env → meta
+agent (no `--project`).
+
+## Webhooks (let external systems start agent runs)
+
+```bash
+tabtabtab webhook create <name> [--project <name>]   # default target: the meta agent; full URL shown once
+tabtabtab webhook list --json                        # URLs masked; add --reveal for the full secrets
+tabtabtab webhook revoke <name-or-id> --yes
+```
+
+POSTing JSON to a webhook URL starts an agent run (project webhooks get a
+fresh git worktree per call):
+
+```bash
+curl -X POST -H 'Content-Type: application/json' \
+  -d '{"message": "Nightly: update deps and open a PR if tests pass"}' \
+  https://<env>.tabtabtab.app/webhooks/<token>
+```
+
+The URL **is** the credential — treat it like a secret, hand it to CI/GitHub
+Actions/Zapier/alerting, and revoke it when no longer needed. The POST body
+also accepts `attachments` (≤5 base64 data-URL files, ≤50MB total — png,
+jpeg, webp, gif, txt, md, json, zip, csv).
 
 ## Recipes
 
-**Spin up a VM and put a repo on it:**
+**Stand up a working env from nothing:**
 ```bash
-ttt vm create demo-box
-# poll until ready:
-ttt vm get demo-box --json   # .status == "ready"
-ttt repo add https://github.com/acme/app.git --vm demo-box
-ttt kick demo-box "Explore the app repo and summarize the architecture" --project app
+tabtabtab env create --name demo-box --git-user-name "Ada" --git-user-email ada@example.com
+tabtabtab env use demo-box
+tabtabtab repo add https://github.com/acme/app.git --yes
+tabtabtab agent kick "Explore the app repo and summarize the architecture" --project app --watch
 ```
 
-**Give an external system a trigger:** `ttt webhook create ci-hook --vm demo-box --project app --json`, then hand the returned `url` to the external system. Each POST starts a fresh agent session in a new worktree.
+**Delegate work and collect it later:**
+```bash
+tabtabtab agent kick "Fix the flaky tests in api/ and push a branch" --project app --json   # → sessionID
+# ... later ...
+tabtabtab agent last ses_<id>
+```
 
-**Send local work to the cloud agent:** `ttt upload demo-box design.md --message "spec for the next task"`, then `ttt kick demo-box "Implement the spec in design.md" --project app`.
+**Send context files, then act on them:**
+```bash
+tabtabtab upload design.md --to ~/workspace/app/
+tabtabtab agent kick "Implement the spec in design.md" --project app
+```
 
-**Set up an automation:** `ttt kick demo-box "Create an automation: every day at 7am Europe/London, pull main in the app project, run the test suite, and open an issue if anything fails"` — the meta agent creates and manages the schedule on the VM.
+**Wire an external trigger:** `tabtabtab webhook create ci-failures --project app --json` → give the `url` to the alerting system; each POST becomes an agent run in a fresh worktree.
+
+**Set up a recurring automation:** `tabtabtab agent kick "Create an automation: every day at 7am, pull main in app, run the test suite, and open an issue if anything fails"` — then verify with `tabtabtab agent status`.
+
+**Check on everything:** `tabtabtab agent status` → running sessions, attention items, pending PRs, automations across all projects.

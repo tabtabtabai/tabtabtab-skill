@@ -1,11 +1,11 @@
 ---
-description: Run a tabtabtab (gv-code) action — VMs, repos, webhooks, uploads, or kick off a remote agent
-argument-hint: "<what you want to do, e.g. 'create a vm called demo' or 'kick off the agent on demo to fix the tests'>"
+description: Run a tabtabtab action — envs, repos, webhooks, uploads, or remote agents (kick/tail/send/status)
+argument-hint: "<what you want, e.g. 'create an env called demo' or 'kick the agent on demo to fix the tests and watch it'>"
 ---
 
 The user wants to do something on the tabtabtab platform: $ARGUMENTS
 
-Use the `tabtabtab` skill (the `ttt` CLI) to do it. Check auth first with
-`ttt whoami --json`; if not logged in, ask the user to run `ttt login`.
-Prefer `--json` output, and when you start an agent session, show the user
-the returned `sessionUrl`.
+Use the `tabtabtab` skill (the official `tabtabtab` CLI) to do it. Check auth
+first with `tabtabtab env list --json`; if unauthorized, ask the user to run
+`tabtabtab auth login`. Prefer `--json` output, and when you start or message
+an agent session, show the user the session URL.
