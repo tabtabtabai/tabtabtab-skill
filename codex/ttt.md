@@ -35,8 +35,9 @@ Commands:
   and upload in a single POST: `POST <url>` `{"message":"<prompt>",
   "attachments":[{"type":"file","name":"x.md","contentType":"text/markdown",
   "data":"data:text/markdown;base64,<b64>"}]}` — each POST starts a new agent
-  run (fresh worktree for project targets) and returns `{sessionID,
-  sessionUrl, ...}`. Attachments: ≤5 files, ≤50MB, types png/jpeg/webp/gif/
+  run (a fresh worktree for a git project target, the project root for a
+  non-git one) and returns `{sessionID, sessionUrl, ...}`. Attachments: ≤5
+  files, ≤50MB, types png/jpeg/webp/gif/
   txt/md/json/zip/csv only. `webhook list` masks URLs (`--reveal` for full
   secrets), `webhook revoke <name> --yes`. Treat URLs as credentials.
 

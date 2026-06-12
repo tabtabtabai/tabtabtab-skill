@@ -189,7 +189,8 @@ Content-Type: application/json
 ```
 
 Every POST **starts a new agent run** and returns immediately (fire-and-forget):
-- `--project` webhook → a fresh git worktree + new session in that project.
+- `--project` webhook on a git project → a fresh git worktree + new session.
+- `--project` webhook on a non-git project → a new session in the project root.
 - meta webhook → a turn on the persistent meta agent.
 
 **Prompting API** = the `message` field. It becomes the agent's prompt verbatim.
@@ -276,7 +277,7 @@ tabtabtab upload design.md --to ~/workspace/app/
 tabtabtab agent kick "Implement the spec in design.md" --project app
 ```
 
-**Wire an external trigger:** `tabtabtab webhook create ci-failures --project app --json` → give the `url` to the alerting system; each POST becomes an agent run in a fresh worktree.
+**Wire an external trigger:** `tabtabtab webhook create ci-failures --project app --json` → give the `url` to the alerting system; each POST becomes a fresh agent run (a new worktree for a git project, the project root otherwise).
 
 **Set up a recurring automation:** `tabtabtab agent kick "Create an automation: every day at 7am, pull main in app, run the test suite, and open an issue if anything fails"` — then verify with `tabtabtab agent status`.
 
