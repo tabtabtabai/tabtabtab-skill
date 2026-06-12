@@ -39,18 +39,31 @@ tabtabtab env use <name>    # set the current env (avoids --env on every call)
 - After `env create`, the command itself polls until ready (a few minutes).
 - Always show the user the session URL printed by `agent kick`/`agent send`
   so they can open the run in the browser.
+- **The remote agent does the work on the env — don't SSH in and do it
+  yourself.** This is the single most important habit, and the easiest to get
+  wrong. For anything that has to happen *on the env* — generate a
+  PDF/report/export, convert/build/compress a file, run a script or test
+  suite, scaffold or edit code, set something up, install a tool — describe
+  the desired outcome to the meta agent with
+  `tabtabtab agent kick "<what you want done>"` (or `--project <name>` to scope
+  it to one repo) and let it do the work. It has a full shell and **will
+  install whatever is missing** (converters, packages, CLIs) on its own, so
+  **never pre-check "is X installed?", hunt for a tool, or hand-run the steps
+  over `tabtabtab ssh`** — just ask for the result, then collect any file it
+  produced with `tabtabtab download`. If you catch yourself about to run
+  `tabtabtab ssh ... -- <command>` to accomplish a task, stop and `agent kick`
+  it instead.
 - **"What's going on in the env?" → ask the meta agent, do NOT SSH in.**
-  When the user asks about the *state* of the environment — what agents are
-  running, what needs their attention, what happened in a project, whether a
-  build/deploy/PR is okay, "what's the status of X", "is anything stuck",
-  "catch me up" — answer with `tabtabtab agent status` (structured overview)
-  or `tabtabtab agent kick "<their question>"` (the meta agent investigates
-  across every project and replies). The meta agent has live cross-project
-  context — running sessions, worktrees, PRs, attention items, automations —
-  that raw SSH does not, so `tabtabtab ssh` + poking around with shell
-  commands is the wrong tool and will miss most of it. Reserve `ssh` for
-  genuine low-level shell work the user explicitly wants (inspect one file,
-  run a specific one-off command).
+  Same principle for *reading* state: questions like what agents are running,
+  what needs attention, what happened in a project, whether a build/deploy/PR
+  is okay, "what's the status of X", "is anything stuck", "catch me up" →
+  `tabtabtab agent status` (structured overview) or
+  `tabtabtab agent kick "<their question>"` (the meta agent investigates across
+  every project and replies). It has live cross-project context — sessions,
+  worktrees, PRs, attention items, automations — that raw SSH cannot see.
+- `tabtabtab ssh` is a **last resort**, used only when the user explicitly
+  asks to open a shell on the box themselves. It is not your tool for getting
+  work done — the agent is.
 
 ## Environments (cloud VMs)
 
@@ -60,7 +73,7 @@ tabtabtab env list --json
 tabtabtab env info [--reveal]             # URL, status; --reveal prints the web password
 tabtabtab env use <name>                  # set current env
 tabtabtab env destroy <name> --yes
-tabtabtab ssh [-- <remote command>]       # low-level shell only — for "what's going on?" use `agent status`/`agent kick`, not this
+tabtabtab ssh [-- <remote command>]       # last resort — to DO work on the env, `agent kick` it; the agent installs what's needed
 tabtabtab upload <local paths...> --to <remote path>   # rsync any files to the env
 tabtabtab open [opencode|claude|codex|vscode|cursor]   # attach a local editor (interactive)
 ```
@@ -100,6 +113,21 @@ tabtabtab agent status                              # all projects: what's runni
   async loop when the task is long.
 
 ## Getting files back (env → local)
+
+The pattern for "make me X and download it" is always **agent produces →
+`download`**, never "SSH in and build it myself." Tell the agent to create the
+file (it installs any converter/tool it needs), then pull it:
+
+```bash
+# user: "turn japan-itinerary.xlsx into a PDF and download it"
+tabtabtab agent kick "Convert ~/workspace/trip/japan-itinerary.xlsx to a PDF at \
+  ~/workspace/trip/japan-itinerary.pdf. Install whatever converter you need." --watch
+tabtabtab download ~/workspace/trip/japan-itinerary.pdf
+```
+
+Do **not** `tabtabtab ssh` in to look for libreoffice/pandoc/etc. or run the
+conversion yourself — that's the agent's job and it will set up dependencies
+on its own.
 
 When a remote agent **produces a file** — a PDF, a build artifact, a report,
 an export — it lives in the env's filesystem, not locally. Pull it with
