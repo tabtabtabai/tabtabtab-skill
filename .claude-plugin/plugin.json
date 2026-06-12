@@ -1,6 +1,6 @@
 {
   "name": "tabtabtab",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Remote-control tabtabtab from Claude Code: create envs, add repositories, run and steer remote agents (kick/tail/send/status), manage webhooks, and build automations via the meta agent \u2014 through the official tabtabtab CLI.",
   "author": {
     "name": "tabtabtab",

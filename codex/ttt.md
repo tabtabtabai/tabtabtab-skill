@@ -20,7 +20,9 @@ Rules:
 
 Commands:
 - Envs: `tabtabtab env create|list|info|use|destroy`, `tabtabtab ssh`,
-  `tabtabtab upload <files> --to <path>` (rsync, any size/type).
+  `tabtabtab upload <files> --to <path>` (local→env), `tabtabtab download
+  <remote paths...> [--to <local dir>] [--force]` (env→local; use this to pull
+  agent-produced files like PDFs/build outputs, binary-safe).
 - Repos: `tabtabtab repo add <git-url> --yes`, `repo list --json`,
   `repo sync`, `repo env list|add|rm` (secrets).
 - Agents: `tabtabtab agent kick "<prompt>" [--project p] [--watch] [--json]`

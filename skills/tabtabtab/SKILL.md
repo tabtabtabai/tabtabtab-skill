@@ -99,6 +99,40 @@ tabtabtab agent status                              # all projects: what's runni
 - Use `--watch` when the user wants to see the run as it happens; use the
   async loop when the task is long.
 
+## Getting files back (env → local)
+
+When a remote agent **produces a file** — a PDF, a build artifact, a report,
+an export — it lives in the env's filesystem, not locally. Pull it with
+`tabtabtab download` (the symmetric counterpart of `upload`; works on binaries
+like PDFs):
+
+```bash
+tabtabtab download <remote path...> [--to <local dir>] [--force]
+```
+
+```bash
+tabtabtab download ~/workspace/app/report.pdf                 # → ./report.pdf
+tabtabtab download ~/workspace/app/dist --to ./out            # a whole directory
+tabtabtab download ~/a.log ~/b.log --to ./logs --force        # many files, overwrite
+```
+
+- Remote paths are absolute or `~`-relative on the env. `--to` defaults to the
+  current directory and is created if missing. `--force` overwrites existing
+  local files (default: skip existing).
+
+**Get the remote path first.** The agent usually states where it wrote the
+file; if not, ask it: `tabtabtab agent send <session-id> "What's the absolute
+path of the file you created?"` then `tabtabtab agent last <session-id>`.
+Project files live under that project's worktree (the session's directory).
+
+After downloading, tell the user the local path (and, in Claude Code, you can
+then read/preview the file).
+
+> Fallback if your CLI predates `download` (added in the agent/webhook release):
+> `tabtabtab ssh --env <env> -- cat /abs/path/report.pdf > report.pdf` is
+> binary-safe; for a directory, `tabtabtab ssh --env <env> -- tar czf - -C
+> /abs/path/dir . > dir.tgz`. Upgrade with `pip install --upgrade tabtabtab`.
+
 ## The meta agent
 
 `agent kick` without `--project` talks to the env's **meta agent** — the
