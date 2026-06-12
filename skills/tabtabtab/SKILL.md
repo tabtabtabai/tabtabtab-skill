@@ -39,6 +39,18 @@ tabtabtab env use <name>    # set the current env (avoids --env on every call)
 - After `env create`, the command itself polls until ready (a few minutes).
 - Always show the user the session URL printed by `agent kick`/`agent send`
   so they can open the run in the browser.
+- **"What's going on in the env?" → ask the meta agent, do NOT SSH in.**
+  When the user asks about the *state* of the environment — what agents are
+  running, what needs their attention, what happened in a project, whether a
+  build/deploy/PR is okay, "what's the status of X", "is anything stuck",
+  "catch me up" — answer with `tabtabtab agent status` (structured overview)
+  or `tabtabtab agent kick "<their question>"` (the meta agent investigates
+  across every project and replies). The meta agent has live cross-project
+  context — running sessions, worktrees, PRs, attention items, automations —
+  that raw SSH does not, so `tabtabtab ssh` + poking around with shell
+  commands is the wrong tool and will miss most of it. Reserve `ssh` for
+  genuine low-level shell work the user explicitly wants (inspect one file,
+  run a specific one-off command).
 
 ## Environments (cloud VMs)
 
@@ -48,7 +60,7 @@ tabtabtab env list --json
 tabtabtab env info [--reveal]             # URL, status; --reveal prints the web password
 tabtabtab env use <name>                  # set current env
 tabtabtab env destroy <name> --yes
-tabtabtab ssh [-- <remote command>]       # SSH in (keys handled automatically)
+tabtabtab ssh [-- <remote command>]       # low-level shell only — for "what's going on?" use `agent status`/`agent kick`, not this
 tabtabtab upload <local paths...> --to <remote path>   # rsync any files to the env
 tabtabtab open [opencode|claude|codex|vscode|cursor]   # attach a local editor (interactive)
 ```
@@ -94,6 +106,12 @@ persistent orchestrator for the whole machine (one durable session; your
 prompts join its ongoing conversation). It is the right target for anything
 beyond a single repo. Ask it in plain English to:
 
+- **Tell you what's going on (the default for any "status" question):** it sees
+  every project, running session, worktree, PR, and automation at once. Use
+  `tabtabtab agent status` for the structured snapshot, or
+  `tabtabtab agent kick "What's happening across my projects? Anything stuck or
+  needing me?"` for a narrative answer. This is what to reach for instead of
+  SSHing in to look around.
 - **Create automations (crons):** scheduled recurring prompts — once, daily,
   weekdays, weekly, or raw RRULE, any timezone, targeting itself or any
   project. `tabtabtab agent kick "Every weekday at 9am Europe/London, review open PRs across my projects and post a digest"`
@@ -105,8 +123,8 @@ beyond a single repo. Ask it in plain English to:
   attention (`tabtabtab agent status` is the read-only view of this).
 
 Routing rule: task inside one repo → `--project <name>`; scheduling,
-automations, multi-repo work, monitoring, or questions about the env → meta
-agent (no `--project`).
+automations, multi-repo work, monitoring, or **any question about the state of
+the environment** → meta agent (no `--project`), never SSH.
 
 ## Webhooks (let external systems start agent runs)
 
