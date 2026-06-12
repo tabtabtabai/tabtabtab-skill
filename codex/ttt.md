@@ -23,6 +23,13 @@ Commands:
   credentials. `--project <name>` targets a project; default is the meta agent.
 - `ttt kick <vm> "<prompt>" [--project p] [--file f]` — start a remote agent
   session; always show the returned `sessionUrl` to the user.
+  Without `--project` the prompt goes to the VM's **meta agent**, which
+  orchestrates the whole VM: it can create scheduled automations/crons (once,
+  daily, weekdays, weekly, RRULE), durable tracked jobs with background checks
+  (e.g. babysit CI until merged), spawn worker agents across projects, create
+  projects/worktrees, and report status. Route single-repo tasks with
+  `--project`; route scheduling, automation, multi-repo, monitoring, or
+  VM-level requests to the meta agent in plain English.
 - `ttt upload <vm> <files...>` — upload files into the agent workspace
   (max 5 files / 50MB; png, jpeg, webp, gif, txt, md, json, zip, csv —
   otherwise use `ttt vm cp`).

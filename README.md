@@ -122,6 +122,20 @@ Actions, cron, Zapier, alerting systems, etc.
 Webhook-based uploads accept ≤5 files / ≤50MB total of
 png, jpeg, webp, gif, txt, md, json, zip, csv. Anything else: `ttt vm cp`.
 
+Without `--project`, `kick` talks to the VM's **meta agent** — the
+orchestrator for the whole machine. Ask it in plain English to:
+
+- create **automations** (scheduled/recurring prompts: daily, weekdays,
+  weekly, or RRULE — targeting itself or any project)
+- run **durable jobs** (tracked long-running work with background checks,
+  e.g. "keep rebasing PR #42 and re-running CI until it merges")
+- **orchestrate workers** across multiple repos, create projects/worktrees,
+  and report what's running and what needs attention
+
+```bash
+ttt kick demo-box "Every weekday at 9am, review open PRs across my projects and post a digest"
+```
+
 Every command supports `--json` for machine-readable output (what the agent
 skills use).
 

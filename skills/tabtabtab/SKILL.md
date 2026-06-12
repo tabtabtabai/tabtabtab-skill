@@ -86,6 +86,32 @@ ttt upload <vm> notes.md data.csv [--project my-app] [--message "context docs"]
   png, jpeg, webp, gif, txt, md, json, zip, csv. For anything else use
   `ttt vm cp` (scp over SSH, no limits).
 
+## The meta agent
+
+When `kick` runs without `--project`, the prompt goes to the VM's **meta
+agent** — the orchestrator that manages the whole VM, not just one repo. It is
+much more capable than a single project agent, so route requests like these to
+it (plain English prompts; it has its own tools for all of this):
+
+- **Automations (crons):** create/pause/inspect scheduled recurring prompts —
+  once, daily, weekdays, weekly, or raw RRULE, with timezone — targeting the
+  meta agent itself or any project on the VM.
+  `ttt kick demo-box "Every weekday at 9am, check open PRs across my projects and Slack me a digest"`
+- **Durable jobs:** long-lived tracked work with an end state and periodic
+  background checks (e.g. babysit CI, watch a deploy until healthy).
+  `ttt kick demo-box "Create a durable job: land PR #42 in my-app — keep rebasing and re-running CI until it's merged"`
+- **Worker orchestration:** plan multi-repo work, spawn agent sessions in
+  project worktrees, answer their permission requests, report progress.
+  `ttt kick demo-box "Start workers to bump lodash in all three repos and open PRs"`
+- **Projects & worktrees:** create new projects, manage worktrees.
+- **Status:** `ttt kick demo-box "Status: what's running, what needs my attention?"`
+
+Rule of thumb: a task *inside one repo* → `--project <name>`; anything about
+scheduling, automations, multiple projects, monitoring, or the VM itself →
+meta agent (no `--project`). Webhooks created with no `--project` likewise
+target the meta agent, so external systems (CI, alerts) can feed it events
+that it handles or fans out to projects.
+
 ## Recipes
 
 **Spin up a VM and put a repo on it:**
@@ -100,3 +126,5 @@ ttt kick demo-box "Explore the app repo and summarize the architecture" --projec
 **Give an external system a trigger:** `ttt webhook create ci-hook --vm demo-box --project app --json`, then hand the returned `url` to the external system. Each POST starts a fresh agent session in a new worktree.
 
 **Send local work to the cloud agent:** `ttt upload demo-box design.md --message "spec for the next task"`, then `ttt kick demo-box "Implement the spec in design.md" --project app`.
+
+**Set up an automation:** `ttt kick demo-box "Create an automation: every day at 7am Europe/London, pull main in the app project, run the test suite, and open an issue if anything fails"` — the meta agent creates and manages the schedule on the VM.
