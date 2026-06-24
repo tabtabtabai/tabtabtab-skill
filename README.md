@@ -70,6 +70,12 @@ tabtabtab agent kick "Run the test suite and fix any failures" --project app --w
 `env create / list / info / use / destroy`, `ssh`, `upload <files> --to <path>`
 (rsync — any file type or size), `open` (attach a local editor).
 
+### Upgrades
+`upgrade status [--check]` (installed/available IDE, firmware, and CLI
+versions), `upgrade run --available` (roll forward everything with an update),
+`upgrade run --ide/--firmware/--cli <version>` (pin an exact release or a
+testable `…-gv.<sha>` build). Same control plane as the web "Dev Mode" panel.
+
 ### Repositories
 `repo add <git-url>` (registers + clones onto the env), `repo list`,
 `repo sync`, `repo env list/add/rm` (per-repo secrets).

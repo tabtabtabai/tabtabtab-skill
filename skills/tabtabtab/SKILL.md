@@ -78,6 +78,28 @@ tabtabtab upload <local paths...> --to <remote path>   # rsync any files to the 
 tabtabtab open [opencode|claude|codex|vscode|cursor]   # attach a local editor (interactive)
 ```
 
+## Upgrading the runtime (IDE / firmware / CLI)
+
+Each env runs three independently versioned components: the **IDE** (`gv_code`,
+the agent IDE itself), the **firmware** (`nero`, the on-box runtime), and the
+on-box **CLI**. `tabtabtab upgrade` drives the same control plane as the web
+"Dev Mode" panel, so you can roll an env forward to the latest release or pin an
+exact testable build (e.g. a `…-gv.<sha>` preview published by gv-code/nero).
+
+```bash
+tabtabtab upgrade status [--check]                       # show installed/available versions; --check probes the box
+tabtabtab upgrade run --available                        # upgrade everything that has an update
+tabtabtab upgrade run --ide <version>                    # pin an exact IDE (gv_code) build
+tabtabtab upgrade run --firmware <version> --cli <version>   # pin firmware and/or CLI
+tabtabtab upgrade run ... --no-wait                      # start the job and return immediately
+```
+
+- `--ide`/`--firmware`/`--cli` take an exact version and can be combined; blank
+  components are skipped. `--available` upgrades only components reporting an
+  update. The command streams job progress and exits non-zero if it fails.
+- Use exact versions for **testable** builds (preview/PR versions like
+  `1.61.4-gv.normaldb.ea8313736464`); use `--available` for normal releases.
+
 ## Repositories
 
 ```bash

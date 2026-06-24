@@ -31,6 +31,10 @@ Commands:
   agent-produced files like PDFs/build outputs, binary-safe).
 - Repos: `tabtabtab repo add <git-url> --yes`, `repo list --json`,
   `repo sync`, `repo env list|add|rm` (secrets).
+- Upgrades: `tabtabtab upgrade status [--check]` shows installed/available IDE
+  (`gv_code`), firmware (`nero`), and CLI versions; `tabtabtab upgrade run
+  --available` rolls forward everything with an update, or pin exact (incl.
+  testable `…-gv.<sha>`) builds with `--ide|--firmware|--cli <version>`.
 - Agents: `tabtabtab agent kick "<prompt>" [--project p] [--watch] [--json]`
   starts a run — meta agent by default, fresh project session with
   `--project`. `agent list`, `agent tail <id> [--follow]`, `agent last <id>`,
